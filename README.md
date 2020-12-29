@@ -1,116 +1,106 @@
-# Create a JavaScript Action
+# Create Attribution JSON
 
-<p align="center">
-  <a href="https://github.com/actions/javascript-action/actions"><img alt="javscript-action status" src="https://github.com/actions/javascript-action/workflows/units-test/badge.svg"></a>
-</p>
+A GitHub Action for creating an `attribution.json` file which contains git log metadata about files in your repo.
 
-Use this template to bootstrap the creation of a JavaScript action.:rocket:
+### Usage
 
-This template includes tests, linting, a validation workflow, publishing, and versioning guidance.
+This action is meant to be use in a scheduled workflow which has a local checkout, and node set up. It will use the `glob` you put in to decide which files you want in the `attribution.json`.
 
-If you are new, there's also a simpler introduction.  See the [Hello World JavaScript Action](https://github.com/actions/hello-world-javascript-action)
+```yml
+	name: Update Attributions Weekly
 
-## Create an action from this template
+on:
+    schedule:
+      # https://crontab.guru/#0_6_*_*_*
+      - cron: '0 6 * * *'
 
-Click the `Use this Template` and provide the new repo details for your action
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-## Code in Main
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 12
+        registry-url: https://registry.npmjs.org/
 
-Install the dependencies
-
-```bash
-npm install
+    # Updates the attribution.json file in git    
+    - uses: OSS-Docs-Tools/create-attribution-json@master
+      with:
+        glob: "docs/*.md"
+    
+    - name: Configure git and update attribution.json
+      run: |
+        git config user.email "bot@github.com"
+        git config user.name "GitHub Bot"
+        git add -f attribution.json
+        if git commit -m "Update attribution.json"; then
+          git push
+        fi
 ```
 
-Run the tests :heavy_check_mark:
+The attribution.json file is optimized for a UI which shows up to 5 contributors (with gravatars), then has a list of many others. E.g:
 
-```bash
-$ npm test
+> This document was created by Ryan Cavanaugh, Daniel Rosenwasser, Orta Therox, Nathan Shively-Sanders, Martin Veith and 27 others.
 
- PASS  ./index.test.js
-  ✓ throws invalid number (3ms)
-  ✓ wait 500 ms (504ms)
-  ✓ test runs (95ms)
-...
-```
+The JSON looks like:
 
-## Change action.yml
-
-The action.yml defines the inputs and output for your action.
-
-Update the action.yml with your name, description, inputs and outputs for your action.
-
-See the [documentation](https://help.github.com/en/articles/metadata-syntax-for-github-actions)
-
-## Change the Code
-
-Most toolkit and CI/CD operations involve async operations so the action is run in an async function.
-
-```javascript
-const core = require('@actions/core');
-...
-
-async function run() {
-  try {
-      ...
-  }
-  catch (error) {
-    core.setFailed(error.message);
+```json
+{  
+  "docs/handbook-v1/Basic Types.md": {
+    "top": [
+      {
+        "name": "Ryan Cavanaugh",
+        "gravatar": "2484d99c8a58bc51ae587e07a05ba6e2",
+        "count": 53
+      },
+      {
+        "name": "Daniel Rosenwasser",
+        "gravatar": "cd1cc3769958ccc22b86d6a87badfe31",
+        "count": 25
+      },
+      {
+        "name": "Orta Therox",
+        "gravatar": "28e997da43c10d99aa99273b48efe8cf",
+        "count": 4
+      },
+      {
+        "name": "Nathan Shively-Sanders",
+        "gravatar": "f2d3b194d100bd25842ca048ab101408",
+        "count": 4
+      },
+      {
+        "name": "Martin Veith",
+        "gravatar": "c14e40955314d925ddde906ee48fc437",
+        "count": 3
+      }
+    ],
+    "total": 32
   }
 }
-
-run()
 ```
 
-See the [toolkit documentation](https://github.com/actions/toolkit/blob/master/README.md#packages) for the various packages.
+### Options
 
-## Package for distribution
+```yml
+  glob: 
+    description: 'A glob for files which you want to provide attribution for'
+    default: '**/*.md'
+    required: false
 
-GitHub Actions will run the entry point from the action.yml. Packaging assembles the code into one file that can be checked in to Git, enabling fast and reliable execution and preventing the need to check in node_modules.
+  useLocalizeJSON: 
+    description: 'A boolean to use a localize.json (used in @oss-docs/sync) for the paths to set attribution instead of a glob'
+    default: 'false'
+    required: false
 
-Actions are run from GitHub repos.  Packaging the action will create a packaged action in the dist folder.
+  output:
+    description: 'The filename for the JSON file for attribution'
+    default: './attribution.json'
+    required: false
 
-Run prepare
-
-```bash
-npm run prepare
+  cwd:
+    description: 'The sub-folder to run everything from, useful for monorepos'
+    default: '.'
+    required: false
 ```
-
-Since the packaged index.js is run from the dist folder.
-
-```bash
-git add dist
-```
-
-## Create a release branch
-
-Users shouldn't consume the action from master since that would be latest code and actions can break compatibility between major versions.
-
-Checkin to the v1 release branch
-
-```bash
-git checkout -b v1
-git commit -a -m "v1 release"
-```
-
-```bash
-git push origin v1
-```
-
-Note: We recommend using the `--license` option for ncc, which will create a license file for all of the production node modules used in your project.
-
-Your action is now published! :rocket:
-
-See the [versioning documentation](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
-
-## Usage
-
-You can now consume the action by referencing the v1 branch
-
-```yaml
-uses: actions/javascript-action@v1
-with:
-  milliseconds: 1000
-```
-
-See the [actions tab](https://github.com/actions/javascript-action/actions) for runs of this action! :rocket:

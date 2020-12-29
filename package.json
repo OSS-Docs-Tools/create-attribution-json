@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@types/globby": "^9.1.0",
+    "@types/jest": "22.2.3",
     "@vercel/ncc": "^0.25.1",
     "eslint": "^7.4.0",
     "husky": "^4.3.6",

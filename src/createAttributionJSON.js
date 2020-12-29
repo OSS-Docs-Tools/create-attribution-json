@@ -9,10 +9,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createAttributionJSON = void 0;
 
 const child_process = require("child_process");
-const path = __importDefault(require("path"));
+const path = require("path");
 const fs = __importDefault(require("fs"));
 const crypto = __importDefault(require("crypto"));
-const prettier = require("prettier");
+
 
 const createAttributionJSON = (files, opts) => {
     
@@ -20,7 +20,7 @@ const createAttributionJSON = (files, opts) => {
 
     // Being first gets you a free x commits
     const getOriginalAuthor = (filepath) => {
-        const creator = child_process.execSync(`git log --follow --format="%an | %aE"  --diff-filter=A "${filepath}"`)
+        const creator = child_process.execSync(`git log --follow --format="%an | %aE"  --diff-filter=A "${filepath}"`, { cwd: opts.cwd})
             .toString()
             .trim();
         return {
@@ -32,7 +32,7 @@ const createAttributionJSON = (files, opts) => {
     // Gets the rest of the authors for a file
     const getAuthorsForFile = (filepath) => {
         const cmd = `git log --follow --format="%an | %aE" "${filepath}"`;
-        const contributors = child_process.execSync(cmd).toString().trim();
+        const contributors = child_process.execSync(cmd, { cwd: opts.cwd }).toString().trim();
         const allContributions = contributors.split("\n").map((c) => {
             return {
                 name: handleDupeNames(c.split(" | ")[0]),
@@ -85,12 +85,12 @@ const createAttributionJSON = (files, opts) => {
 
         rest.sort((l, r) => r.count - l.count);
 
-        const relativePath = fullPath.replace(opts.cwd, "");
+        const relativePath = opts.cwd !== "." ? fullPath.replace(opts.cwd, "") : fullPath
         json[relativePath] = { top: rest.slice(0, 5), total: rest.length + originalRef.total };
     });
 
     const outputJSON = path.posix.join(opts.cwd, opts.output);
-    fs.default.writeFileSync(outputJSON, prettier.format(JSON.stringify(json), { filepath: outputJSON }));
+    fs.default.writeFileSync(outputJSON, JSON.stringify(json));
 };
 
 exports.createAttributionJSON = createAttributionJSON;

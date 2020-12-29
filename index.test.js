@@ -1,23 +1,29 @@
-const wait = require('./wait');
-const process = require('process');
-const cp = require('child_process');
-const path = require('path');
+const { createAttributionJSON } = require("./src/createAttributionJSON");
+const { getGlobFiles, getLocalizedDirs } = require("./src/getFiles");
 
-test('throws invalid number', async () => {
-  await expect(wait('foo')).rejects.toThrow('milliseconds not a number');
+// Go check the results in test/jsons/x.json
+
+test("Gets attributions for some files", async () => {
+  const opts = { cwd: ".", output: "test/jsons/1.json"};
+  createAttributionJSON(["test/file1.md", "test/file2.md"], opts);
 });
 
-test('wait 500 ms', async () => {
-  const start = new Date();
-  await wait(500);
-  const end = new Date();
-  var delta = Math.abs(end - start);
-  expect(delta).toBeGreaterThanOrEqual(500);
+test("handles cwd", async () => {
+  const opts = { cwd: "test", output: "jsons/2.json"};
+  createAttributionJSON(["file1.md", "file2.md"], opts);
 });
 
-// shows how the runner will run a javascript action with env / stdout protocol
-test('test runs', () => {
-  process.env['INPUT_MILLISECONDS'] = 500;
-  const ip = path.join(__dirname, 'index.js');
-  console.log(cp.execSync(`node ${ip}`, {env: process.env}).toString());
-})
+test("globs correctly", async () => {
+  const testFiles = getGlobFiles({ glob: "test"})
+  expect(testFiles).toContain("test/file1.md")
+});
+
+test("globs cwd correctly", async () => {
+  const testFiles = getGlobFiles({ glob: "file1.*", cwd: "test"})
+  expect(testFiles).toContain("file1.md")
+});
+
+test("uses a localize json", async () => {
+  const testFiles = getLocalizedDirs({ cwd: "test" })
+  expect(testFiles).toContain("test/subfolder/ja/file3.md")
+});

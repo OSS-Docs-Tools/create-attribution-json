@@ -8,10 +8,8 @@ require('./sourcemap-register.js');module.exports =
 // @ts-check
 
 const core = __webpack_require__(2186);
-const fs = __webpack_require__(5747);
-const path = __webpack_require__(5622);
-const globby = __webpack_require__(3398);
 const { createAttributionJSON } = __webpack_require__(4091);
+const { getGlobFiles, getLocalizedDirs } = __webpack_require__(3756);
 
 async function run() {
   // Setup for options
@@ -37,30 +35,6 @@ async function run() {
     core.setFailed(error.message);
   }
 }
-
-// Grab filenames from a glob
-const getGlobFiles = (opts) => {
-  const glob = opts.glob;
-  return globby.sync(glob);
-};
-
-// Run through each "to" as a glob grabbing filenames
-const getLocalizedDirs = (opts) => {
-  const localizeJSONPath = path.posix.join(opts.cwd, "localize.json");
-  if (!fs.existsSync(localizeJSONPath)) {
-    throw new Error(`There isn't a localize.json file in the root of ${opts.cwd}`);
-  }
-  
-  const settings = JSON.parse(fs.readFileSync(localizeJSONPath, "utf8"))
-  
-  let allFiles = [];
-  settings.docsRoots.forEach(docs => {
-    const docsRootPath = path.posix.join(opts.cwd, docs.to);
-    allFiles = [...allFiles, ...globby.sync(docsRootPath)];
-  });
-
-  return allFiles
-};
 
 run();
 
@@ -8317,10 +8291,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createAttributionJSON = void 0;
 
 const child_process = __webpack_require__(3129);
-const path = __importDefault(__webpack_require__(5622));
+const path = __webpack_require__(5622);
 const fs = __importDefault(__webpack_require__(5747));
 const crypto = __importDefault(__webpack_require__(6417));
-const prettier = __webpack_require__(9729);
+
 
 const createAttributionJSON = (files, opts) => {
     
@@ -8328,7 +8302,7 @@ const createAttributionJSON = (files, opts) => {
 
     // Being first gets you a free x commits
     const getOriginalAuthor = (filepath) => {
-        const creator = child_process.execSync(`git log --follow --format="%an | %aE"  --diff-filter=A "${filepath}"`)
+        const creator = child_process.execSync(`git log --follow --format="%an | %aE"  --diff-filter=A "${filepath}"`, { cwd: opts.cwd})
             .toString()
             .trim();
         return {
@@ -8340,7 +8314,7 @@ const createAttributionJSON = (files, opts) => {
     // Gets the rest of the authors for a file
     const getAuthorsForFile = (filepath) => {
         const cmd = `git log --follow --format="%an | %aE" "${filepath}"`;
-        const contributors = child_process.execSync(cmd).toString().trim();
+        const contributors = child_process.execSync(cmd, { cwd: opts.cwd }).toString().trim();
         const allContributions = contributors.split("\n").map((c) => {
             return {
                 name: handleDupeNames(c.split(" | ")[0]),
@@ -8393,12 +8367,13 @@ const createAttributionJSON = (files, opts) => {
 
         rest.sort((l, r) => r.count - l.count);
 
-        const relativePath = fullPath.replace(opts.cwd, "");
+        const relativePath = opts.cwd !== "." ? fullPath.replace(opts.cwd, "") : fullPath
+        console.log({before: fullPath, after: relativePath})
         json[relativePath] = { top: rest.slice(0, 5), total: rest.length + originalRef.total };
     });
 
     const outputJSON = path.posix.join(opts.cwd, opts.output);
-    fs.default.writeFileSync(outputJSON, prettier.format(JSON.stringify(json), { filepath: outputJSON }));
+    fs.default.writeFileSync(outputJSON, JSON.stringify(json));
 };
 
 exports.createAttributionJSON = createAttributionJSON;
@@ -8407,11 +8382,43 @@ exports.createAttributionJSON = createAttributionJSON;
 
 /***/ }),
 
-/***/ 9729:
-/***/ ((module) => {
+/***/ 3756:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-module.exports = eval("require")("prettier");
+const fs = __webpack_require__(5747);
+const path = __webpack_require__(5622);
+const globby = __webpack_require__(3398);
 
+// Grab filenames from a glob
+const getGlobFiles = (opts) => {
+  const glob = opts.glob;
+  return globby.sync(glob);
+};
+
+// Run through each "to" as a glob grabbing filenames
+const getLocalizedDirs = (opts) => {
+  const localizeJSONPath = path.posix.join(opts.cwd, "localize.json");
+  if (!fs.existsSync(localizeJSONPath)) {
+    throw new Error(
+      `There isn't a localize.json file in the root of ${opts.cwd}`
+    );
+  }
+
+  const settings = JSON.parse(fs.readFileSync(localizeJSONPath, "utf8"));
+
+  let allFiles = [];
+  settings.docsRoots.forEach((docs) => {
+    const docsRootPath = path.posix.join(opts.cwd, docs.to);
+    allFiles = [...allFiles, ...globby.sync(docsRootPath)];
+  });
+
+  return allFiles;
+};
+
+module.exports = {
+    getGlobFiles,
+    getLocalizedDirs
+}
 
 /***/ }),
 
