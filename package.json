@@ -1,0 +1,40 @@
+{
+  "name": "create-attribution-json",
+  "version": "1.0.0",
+  "description": "A GitHub Action for creating an attribution.json file for a particular subsection of a repo",
+  "main": "index.js",
+  "scripts": {
+    "prepare": "ncc build index.js -o dist --source-map --license licenses.txt",
+    "test": "jest",
+    "all": "npm run lint && npm run prepare"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OSS-Docs-Tools/create-attribution-json.git"
+  },
+  "keywords": [
+    "GitHub",
+    "Actions",
+    "JavaScript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/OSS-Docs-Tools/create-attribution-json/issues"
+  },
+  "homepage": "https://github.com/OSS-Docs-Tools/create-attribution-json#readme",
+  "dependencies": {
+    "@actions/core": "^1.2.5",
+    "globby": "^11.0.1"
+  },
+  "devDependencies": {
+    "@types/globby": "^9.1.0",
+    "@vercel/ncc": "^0.25.1",
+    "eslint": "^7.4.0",
+    "husky": "^4.3.6",
+    "jest": "^26.1.0"
+  },
+  "hooks": {
+    "pre-commit": "yarn build"
+  }
+}

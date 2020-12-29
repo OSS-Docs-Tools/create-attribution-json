@@ -1,0 +1,22 @@
+name: 'create-attribution-json'
+description: 'A GitHub Action for creating an attribution.json file for a particular subsection of a repo'
+inputs:
+  glob: 
+    description: 'A glob for files which you want to provide attribution for'
+    default: '**/*.md'
+    required: false
+  useLocalizeJSON: 
+    description: 'A boolean to use a localize.json (used in @oss-docs/sync) for the paths to set attribution'
+    default: 'false'
+    required: false
+  output:
+    description: 'The filename for the JSON file for attribution'
+    default: './attribution.json'
+    required: false
+  cwd:
+    description: 'The sub-folder to run everything from, useful for monorepos'
+    default: '.'
+    required: false
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
