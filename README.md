@@ -7,7 +7,7 @@ A GitHub Action for creating an `attribution.json` file which contains git log m
 This action is meant to be use in a scheduled workflow which has a local checkout, and node set up. It will use the `glob` you put in to decide which files you want in the `attribution.json`.
 
 ```yml
-	name: Update Attributions Weekly
+name: Update Attributions Weekly
 
 on:
     schedule:
