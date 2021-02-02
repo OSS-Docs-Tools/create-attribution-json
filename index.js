@@ -20,7 +20,7 @@ async function run() {
 
   try {
     // Run the thing
-    const getFiles = opts.useLocalizeJSON ? getGlobFiles : getLocalizedDirs
+    const getFiles = opts.useLocalizeJSON ? getLocalizedDirs : getGlobFiles
     const files = getFiles(opts)
     createAttributionJSON(files, opts)
 

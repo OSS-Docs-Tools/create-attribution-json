@@ -1,12 +1,11 @@
 {
   "name": "create-attribution-json",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A GitHub Action for creating an attribution.json file for a particular subsection of a repo",
   "main": "index.js",
   "scripts": {
     "prepare": "ncc build index.js -o dist --source-map --license licenses.txt",
-    "test": "jest",
-    "all": "npm run lint && npm run prepare"
+    "test": "jest"
   },
   "repository": {
     "type": "git",

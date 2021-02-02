@@ -27,10 +27,11 @@ async function run() {
 
   try {
     // Run the thing
-    const getFiles = opts.useLocalizeJSON ? getGlobFiles : getLocalizedDirs
+    const getFiles = opts.useLocalizeJSON ? getLocalizedDirs : getGlobFiles
     const files = getFiles(opts)
     createAttributionJSON(files, opts)
 
+    
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -8368,7 +8369,6 @@ const createAttributionJSON = (files, opts) => {
         rest.sort((l, r) => r.count - l.count);
 
         const relativePath = opts.cwd !== "." ? fullPath.replace(opts.cwd, "") : fullPath
-        console.log({before: fullPath, after: relativePath})
         json[relativePath] = { top: rest.slice(0, 5), total: rest.length + originalRef.total };
     });
 
@@ -8391,17 +8391,14 @@ const globby = __webpack_require__(3398);
 
 // Grab filenames from a glob
 const getGlobFiles = (opts) => {
-  const glob = opts.glob;
-  return globby.sync(glob);
+  return globby.sync(opts.glob, { cwd: opts.cwd });
 };
 
 // Run through each "to" as a glob grabbing filenames
 const getLocalizedDirs = (opts) => {
   const localizeJSONPath = path.posix.join(opts.cwd, "localize.json");
   if (!fs.existsSync(localizeJSONPath)) {
-    throw new Error(
-      `There isn't a localize.json file in the root of ${opts.cwd}`
-    );
+    throw new Error(`There isn't a localize.json file in the root of ${opts.cwd}`);
   }
 
   const settings = JSON.parse(fs.readFileSync(localizeJSONPath, "utf8"));
@@ -8409,7 +8406,8 @@ const getLocalizedDirs = (opts) => {
   let allFiles = [];
   settings.docsRoots.forEach((docs) => {
     const docsRootPath = path.posix.join(opts.cwd, docs.to);
-    allFiles = [...allFiles, ...globby.sync(docsRootPath)];
+    const files = globby.sync(docsRootPath)
+    allFiles = [...allFiles, ...files];
   });
 
   return allFiles;
